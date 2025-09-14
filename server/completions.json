@@ -1,1 +1,50 @@
-[]
+[
+  {
+    "userId": "user4",
+    "quizId": "cybersecurity-1"
+  },
+  {
+    "userId": "user5",
+    "quizId": "fire-safety-1"
+  },
+  {
+    "userId": "user1",
+    "quizId": "fire-safety-1"
+  },
+  {
+    "userId": "user1",
+    "quizId": "first-aid-1"
+  },
+  {
+    "userId": "user1",
+    "quizId": "flood-safety-1"
+  },
+  {
+    "userId": "user1",
+    "quizId": "cybersecurity-1"
+  },
+  {
+    "userId": "user1",
+    "quizId": "earthquake-1"
+  },
+  {
+    "userId": "user8",
+    "quizId": "fire-safety-1"
+  },
+  {
+    "userId": "user9",
+    "quizId": "fire-safety-1"
+  },
+  {
+    "userId": "user9",
+    "quizId": "first-aid-1"
+  },
+  {
+    "userId": "user2",
+    "quizId": "fire-safety-1"
+  },
+  {
+    "userId": "user20",
+    "quizId": "fire-safety-1"
+  }
+]

@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const { disasterGuides, mockQuizzes, mockUsers, mockConnections, mockAlerts } = require('./db.js');
 const pdfkit = require('pdfkit');
 const fs = require('fs');
-
+const { exec } = require('child_process');
 const app = express();
 const port = 3001;
 const BASE_URL = `http://localhost:${port}`;
@@ -96,30 +96,61 @@ app.get('/api/weather', async (req, res) => {
 app.get('/api/map-points', async (req, res) => {
     const { bbox } = req.query;
     if (!bbox) return res.status(400).send({ message: 'Bounding box is required' });
+
     const overpassQuery = `[out:json][timeout:25];(node["amenity"~"hospital|clinic|doctors|pharmacy"](${bbox});node["amenity"~"police|fire_station"](${bbox});node["emergency"~"assembly_point|shelter"](${bbox}););out center;`;
-    const overpassUrl = `https://overpass-api.de/api/interpreter`;
-    try {
-        const response = await axios.post(overpassUrl, `data=${encodeURIComponent(overpassQuery)}`, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 15000 });
-        const points = response.data.elements.map(el => ({ id: el.id, lat: el.lat, lon: el.lon, name: el.tags.name || 'Unnamed', type: el.tags.amenity || el.tags.emergency })).filter(p => p.name !== 'Unnamed');
-        res.json(points);
-    } catch (error) {
-        res.status(500).send({ message: 'Failed to fetch map data.' });
-    }
+    
+    // Use curl via a shell command
+    const command = `curl -X POST -d 'data=${overpassQuery}' https://overpass-api.de/api/interpreter`;
+
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`exec error: ${error}`);
+            return res.json([]); // Stay resilient
+        }
+        try {
+            const data = JSON.parse(stdout);
+            const points = data.elements.map(el => ({ id: el.id, lat: el.lat, lon: el.lon, name: el.tags.name || 'Unnamed', type: el.tags.amenity || el.tags.emergency })).filter(p => p.name !== 'Unnamed');
+            res.json(points);
+        } catch (parseError) {
+            console.error("Failed to parse curl output:", parseError);
+            res.json([]);
+        }
+    });
 });
+
 
 app.get('/api/map-points/near', async (req, res) => {
     const { lat, lon } = req.query;
-    if (!lat || !lon) return res.status(400).send({ message: 'Latitude and Longitude are required' });
+    if (!lat || !lon) {
+        return res.status(400).send({ message: 'Latitude and Longitude are required' });
+    }
+
     const searchRadius = 5000;
     const overpassQuery = `[out:json][timeout:25];(node["amenity"~"hospital|clinic|pharmacy"](around:${searchRadius},${lat},${lon});node["emergency"~"assembly_point|shelter"](around:${searchRadius},${lat},${lon}););out center;`;
-    const overpassUrl = `https://overpass-api.de/api/interpreter`;
-    try {
-        const response = await axios.post(overpassUrl, `data=${encodeURIComponent(overpassQuery)}`, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 15000 });
-        const points = response.data.elements.map(el => ({ id: el.id, lat: el.lat, lon: el.lon, name: el.tags.name || 'Unnamed', type: el.tags.amenity || el.tags.emergency })).filter(p => p.name !== 'Unnamed');
-        res.json(points);
-    } catch (error) {
-        res.status(500).send({ message: 'Failed to fetch nearby map data.' });
-    }
+    
+    // Use curl via a shell command, just like the other map route
+    const command = `curl -X POST -d 'data=${overpassQuery}' https://overpass-api.de/api/interpreter`;
+
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`exec error for /near: ${error}`);
+            return res.json([]); // Stay resilient on error
+        }
+        try {
+            const data = JSON.parse(stdout);
+            const points = data.elements.map(el => ({ 
+                id: el.id, 
+                lat: el.lat, 
+                lon: el.lon, 
+                name: el.tags.name || 'Unnamed Point', 
+                type: el.tags.amenity || el.tags.emergency || 'Point of Interest' 
+            })).filter(p => p.name !== 'Unnamed Point');
+            res.json(points);
+        } catch (parseError) {
+            console.error("Failed to parse curl output for /near:", parseError);
+            res.json([]); // Stay resilient on parsing failure
+        }
+    });
 });
 
 app.get('/api/guides', (req, res) => {

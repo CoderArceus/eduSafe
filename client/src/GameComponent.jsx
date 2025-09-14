@@ -108,14 +108,20 @@ function GameComponent() {
 
     return (
         <div>
-            <h2>Minigame: Collect Medkits!</h2>
-            <p style={{marginBottom: '0.5rem'}}>Press the <strong style={{color: '#667eea'}}>Spacebar</strong> to jump.</p>
-            <div style={{
-                display: 'flex', justifyContent: 'center', alignItems: 'center',
-                width: '100%', overflow: 'hidden', borderRadius: '8px',
-                backgroundColor: 'skyblue',
-            }}>
-                <canvas ref={canvasRef} style={{ display: 'block' }} />
+            <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 className="text-xl font-bold text-gray-800">Minigame: Collect Medkits!</h2>
+                    <p className="text-gray-600">Press the <span className="font-semibold text-primary-600">Spacebar</span> to jump and collect medical supplies.</p>
+                </div>
+            </div>
+            
+            <div className="bg-gradient-to-b from-sky-200 to-sky-300 rounded-2xl p-6 flex justify-center items-center shadow-soft">
+                <canvas ref={canvasRef} className="rounded-xl shadow-medium" />
             </div>
         </div>
     );
